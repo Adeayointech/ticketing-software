@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Ticket Validation</title>
+</head>
+<body>
+  <h2>Test /tickets/validate Endpoint</h2>
+  <form id="validateForm">
+    <label>Ticket Number:
+      <input type="text" id="ticket_number" name="ticket_number" value="TKT202601255D5B3D345C" required />
+    </label><br><br>
+    <label>JWT Token (organizer):
+      <input type="text" id="jwt" name="jwt" style="width:400px" required />
+    </label><br><br>
+    <button type="submit">Validate Ticket</button>
+  </form>
+  <pre id="result"></pre>
+  <script>
+    document.getElementById('validateForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const ticket_number = document.getElementById('ticket_number').value;
+      const jwt = document.getElementById('jwt').value;
+      const res = await fetch('http://localhost/ticketing-backend/tickets/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + jwt
+        },
+        body: JSON.stringify({ ticket_number })
+      });
+      const text = await res.text();
+      document.getElementById('result').textContent = text;
+    };
+  </script>
+</body>
+</html>

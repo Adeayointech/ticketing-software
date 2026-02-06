@@ -1,0 +1,92 @@
+.event-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.event-card-image {
+  height: 200px;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
+
+.event-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.event-card-content {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.event-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.event-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.info-icon {
+  font-size: 16px;
+}
+
+.event-card-description {
+  color: #777;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  flex: 1;
+}
+
+.event-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.tickets-sold {
+  font-size: 13px;
+  color: #999;
+}
+
+@media (max-width: 768px) {
+  .event-card-image {
+    height: 180px;
+  }
+
+  .event-card-title {
+    font-size: 18px;
+  }
+}

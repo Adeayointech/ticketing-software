@@ -1,0 +1,13 @@
+# Backend uploads - don't commit to git
+uploads/
+qrcodes/
+
+# Environment file
+.env
+
+# Log files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
