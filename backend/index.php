@@ -1,6 +1,5 @@
 
 <?php
-// Remove debug block
 // Load config first to get environment variables
 require_once __DIR__ . '/config/config.php';
 
@@ -14,6 +13,7 @@ header('Content-Type: application/json');
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
+    echo json_encode(['status' => 'ok']);
     exit();
 }
 
