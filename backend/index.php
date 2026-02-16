@@ -1,9 +1,12 @@
 
 <?php
 // Remove debug block
+// Load config first to get environment variables
+require_once __DIR__ . '/config/config.php';
+
 // Set CORS headers for ALL requests, before any output
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
-$allowed = trim(getenv('ALLOWED_ORIGINS') ?: '*');
+$allowed = trim(ALLOWED_ORIGINS);
 if (strpos($allowed, ',') !== false) {
     $allowed = explode(',', $allowed)[0];
     $allowed = trim($allowed);
@@ -25,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/autoload.php';
-require_once __DIR__ . '/config/config.php';
 
 // Parse the request
 $request_uri = $_SERVER['REQUEST_URI'];
