@@ -1,10 +1,10 @@
 RewriteEngine On
 
-# Handle preflight OPTIONS requests first
+# Handle OPTIONS requests with dedicated CORS file
 RewriteCond %{REQUEST_METHOD} OPTIONS
-RewriteRule ^(.*)$ index.php [L]
+RewriteRule ^(.*)$ cors.php [L]
 
-# Redirect all requests to index.php except for existing files/directories
+# Redirect all other requests to index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]
