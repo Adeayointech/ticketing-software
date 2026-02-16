@@ -1,12 +1,24 @@
 .navbar {
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
   height: 70px;
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .navbar-container {
@@ -17,15 +29,22 @@
 }
 
 .navbar-brand {
-  font-size: 24px;
-  font-weight: 700;
-  color: #007bff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .navbar-brand:hover {
-  color: #0056b3;
+  transform: scale(1.05);
+}
+
+.brand-name {
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 0.5px;
 }
 
 .navbar-menu {
@@ -35,14 +54,18 @@
 }
 
 .nav-link {
-  color: #555;
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
+  padding: 8px 16px;
+  border-radius: 8px;
 }
 
 .nav-link:hover {
-  color: #007bff;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
 }
 
 .navbar-user {
@@ -50,17 +73,18 @@
   align-items: center;
   gap: 15px;
   padding-left: 20px;
-  border-left: 1px solid #ddd;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .user-name {
-  color: #333;
+  color: white;
   font-weight: 500;
 }
 
 .btn-sm {
   padding: 6px 15px;
   font-size: 14px;
+  color: rgb(241, 232, 232);
 }
 
 @media (max-width: 768px) {

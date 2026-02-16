@@ -96,7 +96,8 @@ const EventDetails = () => {
 
       setSuccess('Tickets purchased successfully!');
       setTimeout(() => {
-        navigate('/my-tickets');
+        // Force page refresh by navigating with state
+        navigate('/my-tickets', { state: { refresh: Date.now() } });
       }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to purchase tickets');
@@ -175,55 +176,66 @@ const EventDetails = () => {
 
             {event.ticket_types && event.ticket_types.length > 0 ? (
               <>
-                {/* Only show purchase UI for attendees */}
-                {user?.role === 'attendee' && (
-                  <>
-                    <div className="ticket-types">
-                      {event.ticket_types.map((ticketType) => {
-                        const available = ticketType.quantity - ticketType.quantity_sold;
-                        return (
-                          <div key={ticketType.id} className="ticket-type">
-                            <div className="ticket-type-info">
-                              <h3>{ticketType.name}</h3>
-                              {ticketType.description && <p>{ticketType.description}</p>}
-                              <div className="ticket-price">${parseFloat(ticketType.price).toFixed(2)}</div>
-                              <div className="ticket-availability">
-                                {available > 0 ? `${available} available` : 'Sold Out'}
-                              </div>
-                            </div>
-                            <div className="ticket-quantity">
-                              <label>Quantity:</label>
-                              <input
-                                type="number"
-                                min="0"
-                                max={available}
-                                value={selectedTickets[ticketType.id] || 0}
-                                onChange={(e) => handleQuantityChange(ticketType.id, e.target.value)}
-                                disabled={available === 0}
-                                className="quantity-input"
-                              />
-                            </div>
+                {/* Show ticket prices to everyone, but only allow attendees to purchase */}
+                <div className="ticket-types">
+                  {event.ticket_types.map((ticketType) => {
+                    const available = ticketType.quantity - ticketType.quantity_sold;
+                    return (
+                      <div key={ticketType.id} className="ticket-type">
+                        <div className="ticket-type-info">
+                          <h3>{ticketType.name}</h3>
+                          {ticketType.description && <p>{ticketType.description}</p>}
+                          <div className="ticket-price">${parseFloat(ticketType.price).toFixed(2)}</div>
+                          <div className="ticket-availability">
+                            {available > 0 ? `${available} available` : 'Sold Out'}
                           </div>
-                        );
-                      })}
-                    </div>
-                    <div className="purchase-summary">
-                      <div className="total-amount">
-                        <span>Total:</span>
-                        <span className="amount">${getTotalAmount().toFixed(2)}</span>
+                        </div>
+                        {user?.role === 'attendee' && (
+                          <div className="ticket-quantity">
+                            <label>Quantity:</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max={available}
+                              value={selectedTickets[ticketType.id] || 0}
+                              onChange={(e) => handleQuantityChange(ticketType.id, e.target.value)}
+                              disabled={available === 0}
+                              className="quantity-input"
+                            />
+                          </div>
+                        )}
                       </div>
-                      <button
-                        onClick={handlePurchase}
-                        disabled={purchasing || getTotalAmount() === 0}
-                        className="btn btn-success btn-block"
-                      >
-                        {purchasing ? 'Processing...' : 'Purchase Tickets'}
-                      </button>
-                      {!isAuthenticated && (
-                        <p className="login-notice">You need to login to purchase tickets</p>
-                      )}
+                    );
+                  })}
+                </div>
+                
+                {/* Only show purchase controls for attendees */}
+                {user?.role === 'attendee' && (
+                  <div className="purchase-summary">
+                    <div className="total-amount">
+                      <span>Total:</span>
+                      <span className="amount">${getTotalAmount().toFixed(2)}</span>
                     </div>
-                  </>
+                    <button
+                      onClick={handlePurchase}
+                      disabled={purchasing || getTotalAmount() === 0}
+                      className="btn btn-success btn-block"
+                    >
+                      {purchasing ? 'Processing...' : 'Purchase Tickets'}
+                    </button>
+                    {!isAuthenticated && (
+                      <p className="login-notice">You need to login to purchase tickets</p>
+                    )}
+                  </div>
+                )}
+                
+                {/* Show message for organizers */}
+                {user?.role === 'organizer' && (
+                  <div className="organizer-notice">
+                    <p style={{ textAlign: 'center', color: '#667eea', fontWeight: '500', padding: '1rem' }}>
+                      As an organizer, you can view ticket pricing but cannot purchase tickets.
+                    </p>
+                  </div>
                 )}
               </>
             ) : (

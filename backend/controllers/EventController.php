@@ -153,6 +153,42 @@ class EventController {
                 Response::error('Failed to update event', 500);
             }
             
+            // Handle ticket types if provided
+            if (isset($data['ticket_types'])) {
+                // Handle deleted ticket types
+                if (isset($data['deleted_ticket_types']) && is_array($data['deleted_ticket_types'])) {
+                    foreach ($data['deleted_ticket_types'] as $ticketTypeId) {
+                        $this->ticketTypeModel->delete($ticketTypeId);
+                    }
+                }
+                
+                // Process ticket types
+                foreach ($data['ticket_types'] as $ticketType) {
+                    if (isset($ticketType['id']) && $ticketType['id']) {
+                        // Update existing ticket type
+                        $updateData = [
+                            'name' => $ticketType['name'],
+                            'description' => $ticketType['description'] ?? null,
+                            'price' => $ticketType['price'],
+                            'quantity' => $ticketType['quantity']
+                        ];
+                        $this->ticketTypeModel->update($ticketType['id'], $updateData);
+                    } else {
+                        // Create new ticket type
+                        $ticketTypeData = [
+                            'event_id' => $id,
+                            'name' => $ticketType['name'],
+                            'description' => $ticketType['description'] ?? null,
+                            'price' => $ticketType['price'],
+                            'quantity' => $ticketType['quantity'],
+                            'sale_start_date' => $ticketType['sale_start_date'] ?? null,
+                            'sale_end_date' => $ticketType['sale_end_date'] ?? null
+                        ];
+                        $this->ticketTypeModel->create($ticketTypeData);
+                    }
+                }
+            }
+            
             $updatedEvent = $this->eventModel->getById($id);
             $updatedEvent['ticket_types'] = $this->ticketTypeModel->getByEvent($id);
             

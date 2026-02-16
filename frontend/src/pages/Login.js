@@ -70,12 +70,6 @@ const Login = () => {
               Don't have an account? <Link to="/register">Register here</Link>
             </p>
           </div>
-
-          <div className="demo-credentials">
-            <p><strong>Demo Credentials:</strong></p>
-            <p>Attendee: attendee@example.com / password</p>
-            <p>Organizer: organizer@example.com / password</p>
-          </div>
         </div>
       </div>
     </div>

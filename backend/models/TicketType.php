@@ -32,9 +32,11 @@ class TicketType {
     }
     
     public function getByEvent($eventId) {
-        $query = "SELECT * FROM " . $this->table . " 
-                 WHERE event_id = :event_id 
-                 ORDER BY price ASC";
+        $query = "SELECT tt.*, 
+                        COALESCE(tt.quantity_sold, 0) as tickets_sold
+                 FROM " . $this->table . " tt
+                 WHERE tt.event_id = :event_id 
+                 ORDER BY tt.price ASC";
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':event_id', $eventId);
@@ -74,5 +76,73 @@ class TicketType {
         
         $result = $stmt->fetch();
         return $result && $result['available'] >= $quantity;
+    }
+    
+    public function update($id, $data) {
+        $fields = [];
+        $params = [':id' => $id];
+        
+        if (isset($data['name'])) {
+            $fields[] = "name = :name";
+            $params[':name'] = $data['name'];
+        }
+        
+        if (isset($data['description'])) {
+            $fields[] = "description = :description";
+            $params[':description'] = $data['description'];
+        }
+        
+        if (isset($data['price'])) {
+            $fields[] = "price = :price";
+            $params[':price'] = $data['price'];
+        }
+        
+        if (isset($data['quantity'])) {
+            $fields[] = "quantity = :quantity";
+            $params[':quantity'] = $data['quantity'];
+        }
+        
+        if (empty($fields)) {
+            return false;
+        }
+        
+        $query = "UPDATE " . $this->table . " SET " . implode(', ', $fields) . " WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        return $stmt->execute();
+    }
+    
+    public function delete($id) {
+        // Check if any tickets have been sold
+        $query = "SELECT quantity_sold FROM " . $this->table . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        
+        if ($result && $result['quantity_sold'] > 0) {
+            return false; // Cannot delete if tickets have been sold
+        }
+        
+        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        
+        return $stmt->execute();
+    }
+    
+    public function getTicketsSold($id) {
+        $query = "SELECT quantity_sold FROM " . $this->table . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        
+        return $result ? $result['quantity_sold'] : 0;
     }
 }

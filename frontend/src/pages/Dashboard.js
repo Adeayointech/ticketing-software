@@ -40,7 +40,7 @@ const Dashboard = () => {
           ) : (
             <>
               <Link to="/my-tickets" className="dashboard-card">
-                <div className="card-icon">🎟️</div>
+                <div className="card-icon">🎫</div>
                 <h3>My Tickets</h3>
                 <p>View your purchased tickets</p>
               </Link>
@@ -59,7 +59,7 @@ const Dashboard = () => {
             </>
           )}
 
-          <div className="dashboard-card info-card">
+          <Link to="/profile" className="dashboard-card info-card">
             <div className="card-icon">👤</div>
             <h3>Profile</h3>
             <div className="profile-info">
@@ -67,7 +67,8 @@ const Dashboard = () => {
               <p><strong>Email:</strong> {user?.email}</p>
               {user?.phone && <p><strong>Phone:</strong> {user.phone}</p>}
             </div>
-          </div>
+            <p className="edit-hint">Click to edit profile</p>
+          </Link>
         </div>
       </div>
     </div>

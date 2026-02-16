@@ -40,16 +40,76 @@ class User {
     }
     
     public function findById($id) {
-        $query = "SELECT id, email, first_name, last_name, role, phone, created_at 
+        $query = "SELECT id, email, first_name, last_name, role, phone, created_at, password_hash 
                  FROM " . $this->table . " WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
         
-        return $stmt->fetch();
+        $user = $stmt->fetch();
+        if ($user) {
+            // Combine first_name and last_name into name
+            $user['name'] = trim($user['first_name'] . ' ' . $user['last_name']);
+            $user['password'] = $user['password_hash'];
+        }
+        
+        return $user;
     }
     
-    public function update($id, $data) {
+    public function getById($id) {
+        return $this->findById($id);
+    }
+    
+    public function getByEmail($email) {
+        return $this->findByEmail($email);
+    }
+    
+    public function update($data) {
+        $fields = [];
+        $params = [':id' => $data['id']];
+        
+        // Split name into first_name and last_name if provided
+        if (isset($data['name'])) {
+            $nameParts = explode(' ', $data['name'], 2);
+            $fields[] = "first_name = :first_name";
+            $fields[] = "last_name = :last_name";
+            $params[':first_name'] = $nameParts[0];
+            $params[':last_name'] = isset($nameParts[1]) ? $nameParts[1] : '';
+        }
+        
+        if (isset($data['email'])) {
+            $fields[] = "email = :email";
+            $params[':email'] = $data['email'];
+        }
+        
+        if (isset($data['phone'])) {
+            $fields[] = "phone = :phone";
+            $params[':phone'] = $data['phone'];
+        }
+        
+        if (isset($data['password'])) {
+            $fields[] = "password_hash = :password";
+            $params[':password'] = $data['password'];
+        }
+        
+        if (empty($fields)) {
+            return false;
+        }
+        
+        $fields[] = "updated_at = CURRENT_TIMESTAMP";
+        
+        $query = "UPDATE " . $this->table . " SET " . implode(', ', $fields) . " WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        return $stmt->execute();
+    }
+
+    public function oldUpdate($id, $data) {
         $query = "UPDATE " . $this->table . " 
                  SET first_name = :first_name, last_name = :last_name, 
                      phone = :phone, updated_at = CURRENT_TIMESTAMP 

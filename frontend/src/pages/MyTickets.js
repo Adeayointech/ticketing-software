@@ -1,6 +1,6 @@
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 
 
 import { ticketsAPI } from '../services/api';
@@ -8,25 +8,31 @@ import './MyTickets.css';
 
 const MyTickets = () => {
   const { orderId } = useParams();
+  const location = useLocation();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetchTickets();
-  }, []);
+  }, [location.state]);
 
   const fetchTickets = async () => {
     try {
       setLoading(true);
+      console.log('Fetching tickets...');
       const response = await ticketsAPI.getMyTickets();
+      console.log('Tickets response:', response.data);
       let allTickets = response.data.data.tickets;
       if (orderId) {
         allTickets = allTickets.filter(ticket => String(ticket.order_id) === String(orderId));
       }
       setTickets(allTickets);
     } catch (err) {
-      setError('Failed to load tickets');
+      console.error('Failed to load tickets:', err);
+      console.error('Error response:', err.response?.data);
+      const errorMessage = err.response?.data?.message || 'Failed to load tickets';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

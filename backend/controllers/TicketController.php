@@ -1,46 +1,3 @@
-    // Validate and mark ticket as used (for scanning)
-    public function validateTicket($data) {
-        try {
-            $debug = [];
-            try {
-                $user = $this->jwtHandler->getCurrentUser();
-                $debug['user'] = $user;
-            } catch (\Exception $jwtEx) {
-                $debug['jwt_error'] = $jwtEx->getMessage();
-                Response::error('JWT error', 401, $debug);
-            }
-            if (empty($data['ticket_id']) && empty($data['ticket_number'])) {
-                $debug['input'] = $data;
-                Response::error('Ticket ID or Ticket Number is required', 422, $debug);
-            }
-            $ticket = null;
-            $debug['received_ticket_id'] = $data['ticket_id'] ?? null;
-            $debug['received_ticket_number'] = $data['ticket_number'] ?? null;
-            if (!empty($data['ticket_id'])) {
-                $ticket = $this->ticketModel->getById($data['ticket_id']);
-            } elseif (!empty($data['ticket_number'])) {
-                $ticket = $this->ticketModel->getByTicketNumber($data['ticket_number']);
-            }
-            $debug['fetched_ticket'] = $ticket;
-            if (!$ticket) {
-                Response::error('Ticket not found', 404, $debug);
-            }
-            if ($ticket['status'] === 'used') {
-                $debug['status'] = $ticket['status'];
-                Response::error('Ticket already used', 409, $debug);
-            }
-            if ($ticket['status'] !== 'valid') {
-                $debug['status'] = $ticket['status'];
-                Response::error('Ticket is not valid', 400, $debug);
-            }
-            // Mark as used
-            $this->ticketModel->updateStatus($ticket['id'], 'used');
-            $debug['final'] = 'Ticket marked as used';
-            Response::success(['ticket' => $ticket, 'message' => 'Ticket is valid and now marked as used.', 'debug' => $debug]);
-        } catch (\Exception $e) {
-            Response::error($e->getMessage(), 400);
-        }
-    }
 <?php
 namespace Controllers;
 
@@ -149,7 +106,7 @@ class TicketController {
                 }
                 
                 // Create tickets
-                $tickets = [];
+                $ticketIds = [];
                 foreach ($ticketData as $ticket) {
                     for ($i = 0; $i < $ticket['quantity']; $i++) {
                         $ticketNumber = $this->ticketModel->generateTicketNumber();
@@ -160,23 +117,42 @@ class TicketController {
                             'event_id' => $data['event_id'],
                             'ticket_type_id' => $ticket['ticket_type_id'],
                             'ticket_number' => $ticketNumber,
-                            'qr_code' => '', // placeholder, will update after QR code is generated
+                            'qr_code' => 'qrcodes/placeholder.png', // placeholder, will update after transaction
                             'status' => 'valid'
                         ];
+                        
+                        // Debug logging
+                        error_log("Creating ticket with data: " . json_encode($newTicket));
+                        
                         $ticketId = $this->ticketModel->create($newTicket);
                         if (!$ticketId) {
+                            error_log("Failed to create ticket for order $orderId");
                             throw new \Exception('Failed to create ticket');
                         }
-                        // Generate QR code with ticket ID only
-                        $qrCode = $this->generateQRCode($ticketId);
-                        // Update ticket record with QR code filename
-                        $this->ticketModel->updateQRCode($ticketId, $qrCode);
-                        $tickets[] = $this->ticketModel->getById($ticketId);
+                        
+                        error_log("Created ticket ID: $ticketId for user " . $user->id . " event " . $data['event_id']);
+                        
+                        // Store ticket ID for QR generation after transaction
+                        $ticketIds[] = $ticketId;
                     }
                 }
                 
-                // Commit transaction
+                // Commit transaction BEFORE QR generation
                 $this->db->commit();
+                
+                // Generate QR codes AFTER transaction (so tickets are saved even if QR fails)
+                $tickets = [];
+                foreach ($ticketIds as $ticketId) {
+                    try {
+                        $qrCode = $this->generateQRCode($ticketId);
+                        $this->ticketModel->updateQRCode($ticketId, $qrCode);
+                        error_log("QR code generated for ticket $ticketId: $qrCode");
+                    } catch (\Exception $qrError) {
+                        error_log("QR generation failed for ticket $ticketId: " . $qrError->getMessage());
+                        // Continue anyway - ticket is already saved
+                    }
+                    $tickets[] = $this->ticketModel->getById($ticketId);
+                }
                 
                 // Get complete order details
                 $order = $this->orderModel->getById($orderId);
@@ -200,10 +176,30 @@ class TicketController {
     public function getMyTickets() {
         try {
             $user = $this->jwtHandler->getCurrentUser();
+            
+            // Debug: Log the user ID
+            error_log("Fetching tickets for user ID: " . $user->id);
+            
             $tickets = $this->ticketModel->getByUser($user->id);
+            
+            // Debug: Log ticket count
+            error_log("Found " . count($tickets) . " tickets");
+            
+            // Ensure each ticket has required fields
+            foreach ($tickets as &$ticket) {
+                if (empty($ticket['event_image'])) {
+                    $ticket['event_image'] = null;
+                }
+                // Make sure all required fields exist
+                $ticket['id'] = $ticket['id'] ?? null;
+                $ticket['ticket_number'] = $ticket['ticket_number'] ?? '';
+                $ticket['status'] = $ticket['status'] ?? 'valid';
+                $ticket['qr_code'] = $ticket['qr_code'] ?? '';
+            }
             
             Response::success(['tickets' => $tickets]);
         } catch (\Exception $e) {
+            error_log("Error in getMyTickets: " . $e->getMessage());
             Response::unauthorized($e->getMessage());
         }
     }
@@ -228,17 +224,71 @@ class TicketController {
         }
     }
     
-    private function generateQRCode($ticketNumber) {
-        require_once __DIR__ . '/../utils/phpqrcode.php';
-        $qrCodePath = QR_CODE_DIR . $ticketNumber . '.png';
-        \QRcode::png($ticketNumber, $qrCodePath, QR_ECLEVEL_L, QR_CODE_SIZE, QR_CODE_MARGIN);
-        return 'qrcodes/' . $ticketNumber . '.png';
+    // Validate and mark ticket as used (for scanning)
+    public function validateTicket($data) {
+        try {
+            $debug = [];
+            try {
+                $user = $this->jwtHandler->getCurrentUser();
+                $debug['user'] = $user;
+            } catch (\Exception $jwtEx) {
+                $debug['jwt_error'] = $jwtEx->getMessage();
+                Response::error('JWT error', 401, $debug);
+            }
+            if (empty($data['ticket_id']) && empty($data['ticket_number'])) {
+                $debug['input'] = $data;
+                Response::error('Ticket ID or Ticket Number is required', 422, $debug);
+            }
+            $ticket = null;
+            $debug['received_ticket_id'] = $data['ticket_id'] ?? null;
+            $debug['received_ticket_number'] = $data['ticket_number'] ?? null;
+            if (!empty($data['ticket_id'])) {
+                $ticket = $this->ticketModel->getById($data['ticket_id']);
+            } elseif (!empty($data['ticket_number'])) {
+                $ticket = $this->ticketModel->getByTicketNumber($data['ticket_number']);
+            }
+            $debug['fetched_ticket'] = $ticket;
+            if (!$ticket) {
+                Response::error('Ticket not found', 404, $debug);
+            }
+            if ($ticket['status'] === 'used') {
+                $debug['status'] = $ticket['status'];
+                Response::error('Ticket already used', 409, $debug);
+            }
+            if ($ticket['status'] !== 'valid') {
+                $debug['status'] = $ticket['status'];
+                Response::error('Ticket is not valid', 400, $debug);
+            }
+            // Mark as used
+            $this->ticketModel->updateStatus($ticket['id'], 'used');
+            $debug['final'] = 'Ticket marked as used';
+            Response::success(['ticket' => $ticket, 'message' => 'Ticket is valid and now marked as used.', 'debug' => $debug]);
+        } catch (\Exception $e) {
+            Response::error($e->getMessage(), 400);
+        }
     }
+    
     private function generateQRCode($ticketId) {
-        require_once __DIR__ . '/../utils/phpqrcode.php';
-        $qrCodePath = QR_CODE_DIR . $ticketId . '.png';
-        // Use the real phpqrcode library
-        \QRcode::png($ticketId, $qrCodePath, QR_ECLEVEL_L, QR_CODE_SIZE, QR_CODE_MARGIN);
-        return 'qrcodes/' . $ticketId . '.png';
+        try {
+            // Use the full phpqrcode library
+            require_once __DIR__ . '/../utils/phpqrcode/qrlib.php';
+            
+            $qrCodePath = QR_CODE_DIR . $ticketId . '.png';
+            
+            // Ensure directory exists
+            if (!file_exists(QR_CODE_DIR)) {
+                mkdir(QR_CODE_DIR, 0777, true);
+            }
+            
+            // Generate QR code using the full library
+            QRcode::png($ticketId, $qrCodePath, QR_ECLEVEL_L, QR_CODE_SIZE, QR_CODE_MARGIN);
+            
+            error_log("QR code generated successfully for ticket $ticketId");
+            return 'qrcodes/' . $ticketId . '.png';
+        } catch (\Exception $e) {
+            error_log("QR code generation failed: " . $e->getMessage());
+            // Return placeholder if QR generation fails
+            return 'qrcodes/placeholder.png';
+        }
     }
 }

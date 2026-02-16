@@ -12,6 +12,8 @@ import Dashboard from './pages/Dashboard';
 import CreateEvent from './pages/CreateEvent';
 import OrganizerDashboard from './pages/OrganizerDashboard';
 import ScanTicket from './pages/ScanTicket';
+import Profile from './pages/Profile';
+import EditEvent from './pages/EditEvent';
 import './App.css';
 
 
@@ -88,6 +90,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
               
               {/* Organizer Routes */}
               <Route
@@ -103,6 +113,14 @@ function App() {
                 element={
                   <ProtectedRoute organizerOnly={true}>
                     <CreateEvent />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/organizer/edit-event/:id"
+                element={
+                  <ProtectedRoute organizerOnly={true}>
+                    <EditEvent />
                   </ProtectedRoute>
                 }
               />

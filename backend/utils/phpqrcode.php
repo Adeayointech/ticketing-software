@@ -61,7 +61,7 @@ class QRcode {
         // Add finder patterns (top-left, top-right, bottom-left)
         foreach ([[0,0],[0,$size-7],[$size-7,0]] as $pos) {
             for ($y=0;$y<7;$y++) for ($x=0;$x<7;$x++) {
-                $matrix[$pos[0]+$y][$pos[1]+$x] = ($x==0||x==6||y==0||y==6||($x>=2&&x<=4&&$y>=2&&$y<=4)) ? 1 : 0;
+                $matrix[$pos[0]+$y][$pos[1]+$x] = ($x==0||$x==6||$y==0||$y==6||($x>=2&&$x<=4&&$y>=2&&$y<=4)) ? 1 : 0;
             }
         }
         return $matrix;

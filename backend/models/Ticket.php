@@ -59,11 +59,21 @@ class Ticket {
                  WHERE t.user_id = :user_id
                  ORDER BY e.event_date DESC";
         
+        error_log("Executing getByUser query for user_id: $userId");
+        error_log("Query: $query");
+        
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
         
-        return $stmt->fetchAll();
+        $results = $stmt->fetchAll();
+        error_log("Found " . count($results) . " tickets for user $userId");
+        
+        if (count($results) > 0) {
+            error_log("First ticket data: " . json_encode($results[0]));
+        }
+        
+        return $results;
     }
     
     public function getByOrder($orderId) {
@@ -108,6 +118,18 @@ class Ticket {
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':status', $status);
+        
+        return $stmt->execute();
+    }
+    
+    public function updateQRCode($id, $qrCode) {
+        $query = "UPDATE " . $this->table . " 
+                 SET qr_code = :qr_code, updated_at = CURRENT_TIMESTAMP 
+                 WHERE id = :id";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':qr_code', $qrCode);
         
         return $stmt->execute();
     }

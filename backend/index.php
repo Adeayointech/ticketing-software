@@ -150,6 +150,15 @@ try {
             }
             break;
             
+        case 'users':
+            $controller = new Controllers\UserController();
+            if ($action === 'profile' && $method === 'PUT') {
+                $controller->updateProfile($input);
+            } else {
+                throw new Exception('Invalid users endpoint');
+            }
+            break;
+            
         default:
             throw new Exception('Resource not found');
     }

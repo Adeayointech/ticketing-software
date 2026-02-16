@@ -10,7 +10,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="container navbar-container">
         <Link to="/" className="navbar-brand">
-          🎟️ Event Ticketing
+          <span className="brand-name">Accesio</span>
         </Link>
 
         <div className="navbar-menu">

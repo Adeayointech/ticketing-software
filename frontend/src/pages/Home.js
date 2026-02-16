@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { eventsAPI } from '../services/api';
 import EventCard from '../components/EventCard';
 import './Home.css';
@@ -47,29 +48,54 @@ const Home = () => {
   return (
     <div className="home-page">
       <div className="hero-section">
-        <div className="container">
-          <h1 className="hero-title">Discover Amazing Events</h1>
+        <div className="hero-background">
+          <div className="floating-shapes">
+            <div className="shape shape-1"></div>
+            <div className="shape shape-2"></div>
+            <div className="shape shape-3"></div>
+          </div>
+        </div>
+        <div className="container hero-content">
+          <div className="hero-badge">🎉 Your Gateway to Amazing Events</div>
+          <h1 className="hero-title">Experience Live Events<br />Like Never Before</h1>
           <p className="hero-subtitle">
-            Find and book tickets for concerts, conferences, sports, and more
+            Discover concerts, conferences, sports events, and more.<br />Book your tickets instantly and enjoy seamless entry with QR codes.
           </p>
           <form onSubmit={handleSearch} className="search-form">
             <input
               type="text"
-              placeholder="Search events..."
+              placeholder="Search for events, venues, or artists..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
-            <button type="submit" className="btn btn-primary">
-              Search
+            <button type="submit" className="btn btn-search">
+              🔍 Search
             </button>
           </form>
+          <div className="hero-stats">
+            <div className="stat-item">
+              <div className="stat-number">10K+</div>
+              <div className="stat-label">Events Hosted</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">500K+</div>
+              <div className="stat-label">Happy Attendees</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">1K+</div>
+              <div className="stat-label">Organizers</div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="container">
         <div className="events-section">
-          <h2 className="section-title">Upcoming Events</h2>
+          <div className="section-header">
+            <h2 className="section-title">🔥 Trending Events</h2>
+            <p className="section-subtitle">Don't miss out on the hottest events</p>
+          </div>
 
           {error && <div className="alert alert-error">{error}</div>}
 
@@ -88,6 +114,54 @@ const Home = () => {
           )}
         </div>
       </div>
+
+      <footer className="footer">
+        <div className="container">
+          <div className="footer-content">
+            <div className="footer-section">
+              <h3 className="footer-title">
+                <span className="footer-logo">A</span> Accesio
+              </h3>
+              <p className="footer-description">
+                Your trusted platform for discovering and booking amazing events. Experience seamless ticketing with QR code technology.
+              </p>
+            </div>
+            <div className="footer-section">
+              <h4 className="footer-heading">Quick Links</h4>
+              <ul className="footer-links">
+                <li><Link to="/">Browse Events</Link></li>
+                <li><Link to="/register">Create Account</Link></li>
+                <li><Link to="/login">Sign In</Link></li>
+              </ul>
+            </div>
+            <div className="footer-section">
+              <h4 className="footer-heading">For Organizers</h4>
+              <ul className="footer-links">
+                <li><Link to="/register">Host an Event</Link></li>
+                <li><Link to="/organizer/dashboard">Organizer Dashboard</Link></li>
+                <li><a href="#pricing">Pricing</a></li>
+              </ul>
+            </div>
+            <div className="footer-section">
+              <h4 className="footer-heading">Connect With Us</h4>
+              <div className="social-links">
+                <a href="#facebook" className="social-link">Facebook</a>
+                <a href="#twitter" className="social-link">Twitter</a>
+                <a href="#instagram" className="social-link">Instagram</a>
+                <a href="#linkedin" className="social-link">LinkedIn</a>
+              </div>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>&copy; 2026 Accesio. All rights reserved.</p>
+            <div className="footer-bottom-links">
+              <a href="#privacy">Privacy Policy</a>
+              <a href="#terms">Terms of Service</a>
+              <a href="#contact">Contact Us</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
