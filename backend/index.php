@@ -4,21 +4,11 @@
 // Load config first to get environment variables
 require_once __DIR__ . '/config/config.php';
 
-// Set CORS headers for ALL requests, before any output
-$origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
-$allowed = trim(ALLOWED_ORIGINS);
-if (strpos($allowed, ',') !== false) {
-    $allowed = explode(',', $allowed)[0];
-    $allowed = trim($allowed);
-}
-if ($allowed === '*' || $allowed === '"*"') {
-    header('Access-Control-Allow-Origin: *');
-} else {
-    header('Access-Control-Allow-Origin: ' . $allowed);
-}
+// Set CORS headers - Use wildcard for testing
+header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Max-Age: 86400');
 header('Content-Type: application/json');
 
 // Handle preflight requests
