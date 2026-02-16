@@ -1,22 +1,26 @@
 
 <?php
-// Load config first to get environment variables
-require_once __DIR__ . '/config/config.php';
-
-// Set CORS headers - Use wildcard for testing
-header('Access-Control-Allow-Origin: *');
+// Set CORS headers FIRST - before any includes
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+    header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+} else {
+    header('Access-Control-Allow-Origin: *');
+}
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Max-Age: 86400');
-header('Content-Type: application/json');
 
-// Handle preflight requests
+// Handle preflight requests IMMEDIATELY
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    echo json_encode(['status' => 'ok']);
-    exit();
+    header('Content-Type: text/plain');
+    http_response_code(204);
+    exit(0);
 }
 
+// Now load the rest
+header('Content-Type: application/json');
+require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/autoload.php';
 
 // Parse the request
